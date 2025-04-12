@@ -1,0 +1,81 @@
+private async void updateHolidaysButton_Click(object sender, EventArgs e)
+{
+    updateHolidaysButton.Enabled = false;
+    resultLabel.Text = "正在尝试更新节假日信息...";
+    
+    try
+    {
+        // 显示更新方式选择对话框
+        DialogResult dialogResult = MessageBox.Show(
+            "请选择更新节假日的方式:\n" +
+            "【是】- 从网络API更新\n" +
+            "【否】- 从本地文件更新\n" +
+            "【取消】- 取消操作",
+            "更新节假日信息",
+            MessageBoxButtons.YesNoCancel,
+            MessageBoxIcon.Question);
+
+        if (dialogResult == DialogResult.Yes)
+        {
+            // 从API更新
+            bool success = await holidayManager.UpdateFromApiAsync();
+            if (success)
+            {
+                resultLabel.Text = "已从API成功更新节假日信息";
+                MessageBox.Show("节假日信息已更新完成！", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                resultLabel.Text = "从API更新节假日信息失败";
+            }
+        }
+        else if (dialogResult == DialogResult.No)
+        {
+            // 使用文件对话框选择自定义节假日文件
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "JSON文件|*.json|所有文件|*.*";
+                openFileDialog.Title = "选择节假日JSON文件";
+                
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string selectedFile = openFileDialog.FileName;
+                    
+                    try
+                    {
+                        // 读取选择的JSON文件
+                        File.Copy(selectedFile, holidayManager.ConfigFilePath, true);
+                        
+                        // 重新加载节假日数据
+                        holidayManager.LoadHolidays();
+                        
+                        resultLabel.Text = "已从文件更新节假日信息";
+                        MessageBox.Show("节假日信息已从文件更新完成！", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        resultLabel.Text = $"加载节假日文件失败: {ex.Message}";
+                        MessageBox.Show($"加载节假日文件失败: {ex.Message}", "文件错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    resultLabel.Text = "已取消更新节假日";
+                }
+            }
+        }
+        else
+        {
+            resultLabel.Text = "已取消更新节假日";
+        }
+    }
+    catch (Exception ex)
+    {
+        resultLabel.Text = $"更新节假日时出错: {ex.Message}";
+        MessageBox.Show($"更新节假日时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+    finally
+    {
+        updateHolidaysButton.Enabled = true;
+    }
+}
