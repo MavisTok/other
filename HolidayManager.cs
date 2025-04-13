@@ -17,15 +17,19 @@ namespace ScheduleICSGenerator
         private List<DateTime> workOnWeekends = new List<DateTime>();
 
         // 配置文件路径
-        private readonly string configFilePath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory, "holidays.json");
-        
+        private readonly string configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", "holidays.json");
+        //检查这个路径是否合法
+        private readonly string configDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config");
         // 添加公开属性以访问配置文件路径
         public string ConfigFilePath => configFilePath;
-
         // 构造函数
         public HolidayManager()
         {
+            // 检查配置文件目录是否存在，如果不存在则创建
+            if (!Directory.Exists(configDirPath))
+            {
+                Directory.CreateDirectory(configDirPath);
+            }
             // 确保初始化时配置文件存在
             if (!File.Exists(configFilePath))
             {
@@ -136,6 +140,10 @@ namespace ScheduleICSGenerator
                 {
                     WriteIndented = true // 格式化JSON以便于阅读
                 });
+                //在exe运行目录下创建配置文件
+                // 这里使用AppDomain.CurrentDomain.BaseDirectory获取当前应用程序的目录
+                // 也可以使用Environment.CurrentDirectory获取当前工作目录
+                // 也可以使用Path.Combine来构建路径
 
                 File.WriteAllText(configFilePath, json);
             }
